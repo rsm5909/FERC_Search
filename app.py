@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
 
 
-class WebSpider:
+class FercSpider:
     def __init__(self, **kwargs):
         self.url = 'https://elibrary.ferc.gov/idmws/search/advResults.asp'
         self.downloadurl = 'https://elibrary.ferc.gov/idmws'
@@ -198,7 +198,7 @@ class WebSpider:
 
 if __name__ == "__main__":
     print('BEGIN')
-    fercSpider = WebSpider(docClass='Applicant Correspondence')
+    fercSpider = FercSpider(docClass='Applicant Correspondence')
     linksList, res = fercSpider.parse()
-    WebSpider.upload_dropbox(linksList, res, saveHTML=True)
+    FercSpider.upload_dropbox(linksList, res, saveHTML=True)
     print('END')
