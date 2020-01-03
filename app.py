@@ -156,7 +156,10 @@ class WebSpider:
 
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
-        access_token = os.environ.get("token")
+        with open("token.txt", 'r') as f:
+            access_token = f.read()
+            print(access_token)
+            quit()
 
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
         dbx = dropbox.Dropbox(access_token)
