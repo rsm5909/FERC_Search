@@ -1,0 +1,73 @@
+INFO:root:Making request to url: https://elibrary.ferc.gov/idmws/search/advResults.asp
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "POST /idmws/search/advResults.asp HTTP/1.1" 200 73510
+INFO:root:Request completed with code:200
+INFO:root:Search returned 9 hits
+INFO:root:Begin save page HTML
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): content.dropboxapi.com:443
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Upload complete. filename:/01-03-2020/01-03-2020_HTML.html
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15435494 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20200102-5245%2833929096%29.pdf&folder=1505055&fileid=15435494&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15435494
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15435494.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15433989 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191231-5126%2833927485%29.pdf&folder=1505059&fileid=15433989&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15433989
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15433989.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15433996 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191231-5128%2833927492%29.pdf&folder=1505061&fileid=15433996&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15433996
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15433996.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15434546 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191231-5305%2833928062%29.pdf&folder=1505063&fileid=15434546&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15434546
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15434546.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15432569 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191230-5028%2833925847%29.pdf&folder=1505064&fileid=15432569&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15432569
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15432569.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15432610 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191230-5038%2833925888%29.pdf&folder=1505066&fileid=15432610&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15432610
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15432610.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15432612 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191230-5040%2833925890%29.pdf&folder=1505068&fileid=15432612&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15432612
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15432612.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15432679 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191230-5054%2833925957%29.pdf&folder=1505071&fileid=15432679&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15432679
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15432679.pdf
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): elibrary.ferc.gov:443
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/opennat.asp?fileID=15433241 HTTP/1.1" 302 237
+DEBUG:urllib3.connectionpool:https://elibrary.ferc.gov:443 "GET /idmws/common/downloadOpen.asp?downloadfile=20191230-5195%2833926675%29.pdf&folder=1505072&fileid=15433241&trial=1 HTTP/1.1" 200 None
+INFO:root:Successfully downloaded file URL: https://elibrary.ferc.gov/idmws/common/opennat.asp?fileID=15433241
+INFO:dropbox:Request to files/upload
+DEBUG:urllib3.connectionpool:https://content.dropboxapi.com:443 "POST /2/files/upload HTTP/1.1" 200 None
+INFO:root:Successfully uploaded to dropbox: /01-03-2020/01-03-2020_15433241.pdf
