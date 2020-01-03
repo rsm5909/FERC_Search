@@ -197,8 +197,9 @@ class FercSpider:
 
 
 if __name__ == "__main__":
-    print('BEGIN')
+    logging.info('BEGIN')
     fercSpider = FercSpider(docClass='Applicant Correspondence')
     linksList, res = fercSpider.parse()
     FercSpider.upload_dropbox(linksList, res, saveHTML=True)
+    logging.info('END')
     print('END')
