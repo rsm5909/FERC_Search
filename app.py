@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import dropbox
 from datetime import date, timedelta
-import os
 import logging
 logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
 
@@ -10,7 +9,7 @@ logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
 class FercSpider:
     def __init__(self, **kwargs):
         self.url = 'https://elibrary.ferc.gov/idmws/search/advResults.asp'
-        self.downloadurl = 'https://elibrary.ferc.gov/idmws'
+
         if kwargs.get('fromDate'):
             self.from_date = kwargs['fromDate']
         else:
@@ -22,7 +21,7 @@ class FercSpider:
         if kwargs.get('docClass'):
             self.doc_class = kwargs['docClass']
         else:
-            self.doc_class = ''
+            self.doc_class = 'Applicant Correspondence'
         if kwargs.get('textSearch'):
             self.text_search = kwargs['textSearch']
         else:
@@ -43,9 +42,15 @@ class FercSpider:
                                 "Emergency Action Plan" OR \
                                 "Safety Signs" OR \
                                 "Safety Signage"'
-            print(self.text_search)
 
-    def make_request(self):
+
+    @classmethod
+    def make_request(cls, **kwargs):
+        ferc = cls(**kwargs)
+
+        print(ferc.url)
+        print(kwargs)
+
         formdata = [
             ('FROMdt', ''),
             ('TOdt', ''),
@@ -61,12 +66,12 @@ class FercSpider:
             ('category', 'submittal'),
             ('category', 'issuance'),
             ('filed_date', 'on'),
-            ('from_date', self.from_date),
-            ('to_date', self.to_date),
-            ('from_dDate', self.from_date),
-            ('to_dDate', self.to_date),
-            ('from_pDate', self.from_date),
-            ('to_pDate', self.to_date),
+            ('from_date', ferc.from_date),
+            ('to_date', ferc.to_date),
+            ('from_dDate', ferc.from_date),
+            ('to_dDate', ferc.to_date),
+            ('from_pDate', ferc.from_date),
+            ('to_pDate', ferc.to_date),
             ('docket1', ''),
             ('subdocket1', ''),
             ('docket2', ''),
@@ -76,10 +81,10 @@ class FercSpider:
             ('docket4', ''),
             ('subdocket4', ''),
             ('library', 'hydro'),
-            ('textsearch', self.text_search),
+            ('textsearch', ferc.text_search),
             ('description', 'description'),
             ('fulltext', 'fulltext'),
-            ('class', self.doc_class),
+            ('class', ferc.doc_class),
             ('class', '999'),
             ('class', '999'),
             ('class', '999'),
@@ -119,32 +124,38 @@ class FercSpider:
             ]
 
         # Make the request
-        logging.info('Making request to url: {}'.format(self.url))
+        logging.info('Making request to url: {}'.format(ferc.url))
         header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko)'}
-        response = requests.post(self.url, data=formdata, timeout=600, headers=header)
+        response = requests.post(ferc.url, data=formdata, timeout=600, headers=header)
         print('Request completed with code:{}'.format(response.status_code))
         logging.info('Request completed with code:{}'.format(response.status_code))
+        ferc.response = response
         return response
 
-    def parse(self, **kwargs):
-        response = self.make_request()
+    @staticmethod
+    def parse(response):
+        downloadurl = 'https://elibrary.ferc.gov/idmws'
+
         soup = BeautifulSoup(response.content, 'html5lib')
+
         num_hits = soup.select('td tr + tr strong')[0].text
+
         logging.info('Search returned {} hits'.format(num_hits))
+
         download_links = []
         if int(num_hits) != 0:
             rows = soup.select('body > center > table > tbody > tr')[9:-2]
             for ix, row in enumerate(rows):
                 try:
                     path = row.find('a', href=True, text='FERC Generated PDF')['href']
-                    path = self.downloadurl + path.replace('..', '')
+                    path = downloadurl + path.replace('..', '')
                     print(path)
                     download_links.append(path)
                 except TypeError:
                     logging.warning('No FERC PDFs available for index: {}'.format(ix))
                     try:
                         path = row.find('a', href=True, text='PDF')['href']
-                        path = self.downloadurl + path.replace('..', '')
+                        path = downloadurl + path.replace('..', '')
                         print(path)
                         download_links.append(path)
                     except TypeError:
@@ -152,17 +163,17 @@ class FercSpider:
                         print(row)
         else:
             logging.warning('Search returned 0 hits')
-        return download_links, response
+        return download_links
 
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
         with open("token.txt", 'r') as f:
             access_token = f.read()
             print(access_token)
-            quit()
 
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
         dbx = dropbox.Dropbox(access_token)
+        print(dbx)
         path = '/{}/'.format(today)
 
         if kwargs.get('saveHTML'):
@@ -175,9 +186,11 @@ class FercSpider:
                 print('Upload Failed html')
 
         for ix, link in enumerate(links):
+            print(link)
             fileID = link.split('=')[-1]
             name = today + '_' + fileID + '.pdf'
-            pdf_path = '/{}/{}'.format(today,name)
+            pdf_path = '/{}/{}'.format(today, name)
+            print(pdf_path)
             try:
                 dl_response = requests.get(link)
                 logging.info('Successfully downloaded file URL: {}'.format(link))
@@ -198,8 +211,7 @@ class FercSpider:
 
 if __name__ == "__main__":
     logging.info('BEGIN')
-    fercSpider = FercSpider(docClass='Applicant Correspondence')
-    linksList, res = fercSpider.parse()
-    FercSpider.upload_dropbox(linksList, res, saveHTML=True)
+    res = FercSpider.make_request()
+    FercSpider.upload_dropbox(FercSpider.parse(res), res)
     logging.info('END')
     print('END')
