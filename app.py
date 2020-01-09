@@ -3,7 +3,10 @@ from bs4 import BeautifulSoup
 import dropbox
 from datetime import date, timedelta
 import os
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk import pos_tag
 import logging
+
 logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
 
 
@@ -44,6 +47,23 @@ class FercSpider:
                                 "Safety Signs" OR \
                                 "Safety Signage"'
             print(self.text_search)
+        self.search_terms = ["Project Safety-Related Submission",
+                             "EAP Annual Update",
+                             "Annual Spillway Gate Operation",
+                             "Public Safety Plan",
+                             "Signage",
+                             "Annual Downstream Assessment",
+                             "EAP Exemption",
+                             "Log Boom",
+                             "Boat Barrier",
+                             "Buoy",
+                             "BGS",
+                             "Salmonids",
+                             "Fish Guidance",
+                             "Dam Safety Inspection",
+                             "Emergency Action Plan",
+                             "Safety Signs",
+                             "Safety Signage"]
 
     def make_request(self):
         formdata = [
@@ -116,37 +136,60 @@ class FercSpider:
             ('child_doc', ''),
             ('availability', 'p'),
             ('DocsCount', '200'),
-            ]
+        ]
 
         # Make the request
         logging.info('Making request to url: {}'.format(self.url))
-        header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko)'}
+        header = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko)'}
         response = requests.post(self.url, data=formdata, timeout=600, headers=header)
         print('Request completed with code:{}'.format(response.status_code))
         logging.info('Request completed with code:{}'.format(response.status_code))
+
         return response
 
     def parse(self, **kwargs):
         response = self.make_request()
         soup = BeautifulSoup(response.content, 'html5lib')
-        num_hits = soup.select('td tr + tr strong')[0].text
+        try:
+            num_hits = soup.select('td tr + tr strong')[0].text
+        except:
+            num_hits = 0
         logging.info('Search returned {} hits'.format(num_hits))
         download_links = []
         if int(num_hits) != 0:
             rows = soup.select('body > center > table > tbody > tr')[9:-2]
             for ix, row in enumerate(rows):
+                text = row.select('td')[3].text.replace('\n', '')
+                title = None
+                for term in self.search_terms:
+                    if term in text:
+                        filtered = text.replace(term,'')
+                        words = word_tokenize(filtered)
+                        nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
+                        s = '-'
+                        nnp_str = s.join(nnp)
+                        title = '{}_{}'.format(term, nnp_str)
+                    else:
+                        words = word_tokenize(text)
+                        nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
+                        s = '-'
+                        title = s.join(nnp)
+
                 try:
                     path = row.find('a', href=True, text='FERC Generated PDF')['href']
                     path = self.downloadurl + path.replace('..', '')
                     print(path)
-                    download_links.append(path)
+                    print(title)
+                    download_links.append((path, title))
                 except TypeError:
                     logging.warning('No FERC PDFs available for index: {}'.format(ix))
                     try:
                         path = row.find('a', href=True, text='PDF')['href']
                         path = self.downloadurl + path.replace('..', '')
                         print(path)
-                        download_links.append(path)
+                        print(title)
+                        download_links.append((path, title))
                     except TypeError:
                         logging.warning('No PDFs available for index: {}'.format(ix))
                         print(row)
@@ -156,14 +199,10 @@ class FercSpider:
 
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
-        with open("token.txt", 'r') as f:
-            access_token = f.read()
-            print(access_token)
-            quit()
-
+        access_token = '05mjimtabTkAAAAAAAHZWqPLYduK0Tui5YHkda_vxzG-PcEvyq52LKpJHeASeime'
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
         dbx = dropbox.Dropbox(access_token)
-        path = '/{}/'.format(today)
+        path = '/test/{}/'.format(today)
 
         if kwargs.get('saveHTML'):
             logging.info('Begin save page HTML')
@@ -175,23 +214,23 @@ class FercSpider:
                 print('Upload Failed html')
 
         for ix, link in enumerate(links):
-            fileID = link.split('=')[-1]
-            name = today + '_' + fileID + '.pdf'
-            pdf_path = '/{}/{}'.format(today,name)
+            fileID = link[1].split('=')[-1]
+            name = link[0] + '.pdf'
+            pdf_path = '/test/{}/{}'.format(today,name)
             try:
-                dl_response = requests.get(link)
-                logging.info('Successfully downloaded file URL: {}'.format(link))
+                dl_response = requests.get(link[1])
+                logging.info('Successfully downloaded file URL: {}'.format(link[1]))
                 print('response success')
             except:
-                logging.warning('Error downloading file URL: {}'.format(link))
+                logging.warning('Error downloading file URL: {}'.format(link[1]))
                 print('response failed')
                 continue
             try:
                 dbx.files_upload(dl_response.content, pdf_path)
                 logging.info('Successfully uploaded to dropbox: {}'.format(pdf_path))
                 print('upload success')
-            except :
-                logging.warning('Error uploading to dropbox: {}'.format(link))
+            except:
+                logging.warning('Error uploading to dropbox: {}'.format(link[1]))
                 print('upload failed')
                 continue
 
