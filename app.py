@@ -7,7 +7,7 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk import pos_tag
 import logging
 
-logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
+logging.basicConfig(filename='FERC.log', level=logging.WARNING)
 
 # class contains all methods
 class FercSpider:
