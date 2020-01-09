@@ -2,18 +2,31 @@ import requests
 from bs4 import BeautifulSoup
 import dropbox
 from datetime import date, timedelta
-import os
+import json
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk import pos_tag
 import logging
 
 logging.basicConfig(filename='FERC.log', level=logging.DEBUG)
 
-
+# class contains all methods
 class FercSpider:
+    # initialization
     def __init__(self, **kwargs):
+        # base url to POST search query form
         self.url = 'https://elibrary.ferc.gov/idmws/search/advResults.asp'
+
+        # download url for getting PDFs
         self.downloadurl = 'https://elibrary.ferc.gov/idmws'
+
+        # search terms imported from file
+        with open('srchterms.json', 'r') as f:
+            self.search_terms = json.load(f)
+        # formatting terms as string for form POST
+        sep = ' OR '
+        self.text_search = sep.join(self.search_terms)
+
+        # initialize other keyword arguments
         if kwargs.get('fromDate'):
             self.from_date = kwargs['fromDate']
         else:
@@ -26,47 +39,10 @@ class FercSpider:
             self.doc_class = kwargs['docClass']
         else:
             self.doc_class = ''
-        if kwargs.get('textSearch'):
-            self.text_search = kwargs['textSearch']
-        else:
-            self.text_search = '"Project Safety-Related Submission" OR \
-                                "EAP Annual Update" OR \
-                                "Annual Spillway Gate Operation" OR \
-                                "Public Safety Plan" OR \
-                                "Signage" OR \
-                                "Annual Downstream Assessment" OR \
-                                "EAP Exemption" OR \
-                                "Log Boom" OR \
-                                "Boat Barrier" OR \
-                                "Buoy" OR \
-                                "BGS" OR \
-                                "Salmonids" OR \
-                                "Fish Guidance" OR \
-                                "Dam Safety Inspection" OR \
-                                "Emergency Action Plan" OR \
-                                "Safety Signs" OR \
-                                "Safety Signage"'
 
-
-        self.search_terms = ["Project Safety-Related Submission",
-                             "EAP Annual Update",
-                             "Annual Spillway Gate Operation",
-                             "Public Safety Plan",
-                             "Signage",
-                             "Annual Downstream Assessment",
-                             "EAP Exemption",
-                             "Log Boom",
-                             "Boat Barrier",
-                             "Buoy",
-                             "BGS",
-                             "Salmonids",
-                             "Fish Guidance",
-                             "Dam Safety Inspection",
-                             "Emergency Action Plan",
-                             "Safety Signs",
-                             "Safety Signage"]
-
+    # method executes POST request w/ form data and returns html response
     def make_request(self):
+        # form containing search parameters
         formdata = [
             ('FROMdt', ''),
             ('TOdt', ''),
@@ -139,24 +115,33 @@ class FercSpider:
             ('DocsCount', '200'),
         ]
 
-        # Make the request
         logging.info('Making request to url: {}'.format(self.url))
         header = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko)'}
+
+        # POST request and get response
         response = requests.post(self.url, data=formdata, timeout=600, headers=header)
+
         print('Request completed with code:{}'.format(response.status_code))
         logging.info('Request completed with code:{}'.format(response.status_code))
-
         return response
 
+    # parse the search results page
     def parse(self, **kwargs):
+        # make request
         response = self.make_request()
+
+        # parsing done with BeautifulSoup library
         soup = BeautifulSoup(response.content, 'html5lib')
+
+        # get num search results
         try:
             num_hits = soup.select('td tr + tr strong')[0].text
         except:
             num_hits = 0
         logging.info('Search returned {} hits'.format(num_hits))
+
+        # filter table rows from result, extract file description for save name in dropbox
         download_links = []
         if int(num_hits) != 0:
             rows = soup.select('body > center > table > tbody > tr')[9:-2]
@@ -166,6 +151,7 @@ class FercSpider:
                 except:
                     text = ""
 
+                # find search term matches in file description using NLTK
                 term = [t for t in self.search_terms if t in text]
                 if len(term) > 0:
                     term = term[0]
@@ -180,7 +166,7 @@ class FercSpider:
                     nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
                     s = '-'
                     title = s.join(nnp)
-
+                # now that we have a title, get the link and append both to download_links as tuple
                 try:
                     path = row.find('a', href=True, text='FERC Generated PDF')['href']
                     path = self.downloadurl + path.replace('..', '')
@@ -202,15 +188,18 @@ class FercSpider:
             logging.warning('Search returned 0 hits')
         return download_links, response
 
+    # upload files to dropbox
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
+        # get API token
         with open('token.txt', 'r') as file:
             access_token = file.read()
-            print(access_token)
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
-        dbx = dropbox.Dropbox(access_token)
         path = '/{}/'.format(today)
+        # connect to dropbox
+        dbx = dropbox.Dropbox(access_token)
 
+        # save response HTML to dropbox
         if kwargs.get('saveHTML'):
             logging.info('Begin save page HTML')
             savestr = path + '{}_HTML.html'.format(today)
@@ -218,8 +207,10 @@ class FercSpider:
                 dbx.files_upload(r.content, savestr)
                 logging.info('Upload complete. filename:{}'.format(savestr))
             except Exception as e:
+                logging.warning('Error downloading HTML.\nException: {}'.format(e))
                 print('Upload Failed html', e)
 
+        # follow download links and upload result with proper title
         for ix, link in enumerate(links):
             name = link[0] + '.pdf'
             pdf_path = '/{}/{}'.format(today,name)
@@ -240,7 +231,7 @@ class FercSpider:
                 print('upload failed')
                 continue
 
-
+# main function
 if __name__ == "__main__":
     logging.info('BEGIN')
     fercSpider = FercSpider(docClass='Applicant Correspondence')
