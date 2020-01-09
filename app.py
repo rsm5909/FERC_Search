@@ -46,7 +46,8 @@ class FercSpider:
                                 "Emergency Action Plan" OR \
                                 "Safety Signs" OR \
                                 "Safety Signage"'
-            print(self.text_search)
+
+
         self.search_terms = ["Project Safety-Related Submission",
                              "EAP Annual Update",
                              "Annual Spillway Gate Operation",
@@ -160,28 +161,32 @@ class FercSpider:
         if int(num_hits) != 0:
             rows = soup.select('body > center > table > tbody > tr')[9:-2]
             for ix, row in enumerate(rows):
-                text = row.select('td')[3].text.replace('\n', '')
-                title = None
-                for term in self.search_terms:
-                    if term in text:
-                        filtered = text.replace(term,'')
-                        words = word_tokenize(filtered)
-                        nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
-                        s = '-'
-                        nnp_str = s.join(nnp)
-                        title = '{}_{}'.format(term, nnp_str)
-                    else:
-                        words = word_tokenize(text)
-                        nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
-                        s = '-'
-                        title = s.join(nnp)
+                try:
+                    text = row.select('td')[3].text.replace('\n', '')
+                except:
+                    text = ""
+
+                term = [t for t in self.search_terms if t in text]
+                if len(term) > 0:
+                    term = term[0]
+                    filtered = text.replace(term, '')
+                    words = word_tokenize(filtered)
+                    nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
+                    s = '-'
+                    nnp_str = s.join(nnp)
+                    title = '{}_{}'.format(term,nnp_str)
+                else:
+                    words = word_tokenize(text)
+                    nnp = [x[0] for x in pos_tag(words) if x[1] == 'NNP'][:5]
+                    s = '-'
+                    title = s.join(nnp)
 
                 try:
                     path = row.find('a', href=True, text='FERC Generated PDF')['href']
                     path = self.downloadurl + path.replace('..', '')
                     print(path)
                     print(title)
-                    download_links.append((path, title))
+                    download_links.append((title, path))
                 except TypeError:
                     logging.warning('No FERC PDFs available for index: {}'.format(ix))
                     try:
@@ -189,7 +194,7 @@ class FercSpider:
                         path = self.downloadurl + path.replace('..', '')
                         print(path)
                         print(title)
-                        download_links.append((path, title))
+                        download_links.append((title, path))
                     except TypeError:
                         logging.warning('No PDFs available for index: {}'.format(ix))
                         print(row)
@@ -199,10 +204,12 @@ class FercSpider:
 
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
-        access_token = 'x12'
+        with open('token.txt', 'r') as file:
+            access_token = file.read()
+            print(access_token)
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
         dbx = dropbox.Dropbox(access_token)
-        path = '/test/{}/'.format(today)
+        path = '/{}/'.format(today)
 
         if kwargs.get('saveHTML'):
             logging.info('Begin save page HTML')
@@ -210,27 +217,26 @@ class FercSpider:
             try:
                 dbx.files_upload(r.content, savestr)
                 logging.info('Upload complete. filename:{}'.format(savestr))
-            except:
-                print('Upload Failed html')
+            except Exception as e:
+                print('Upload Failed html', e)
 
         for ix, link in enumerate(links):
-            fileID = link[1].split('=')[-1]
             name = link[0] + '.pdf'
-            pdf_path = '/test/{}/{}'.format(today,name)
+            pdf_path = '/{}/{}'.format(today,name)
             try:
                 dl_response = requests.get(link[1])
                 logging.info('Successfully downloaded file URL: {}'.format(link[1]))
                 print('response success')
-            except:
-                logging.warning('Error downloading file URL: {}'.format(link[1]))
+            except Exception as e:
+                logging.warning('Error downloading file URL: {}\nException: {}'.format(link[1], e))
                 print('response failed')
                 continue
             try:
                 dbx.files_upload(dl_response.content, pdf_path)
                 logging.info('Successfully uploaded to dropbox: {}'.format(pdf_path))
                 print('upload success')
-            except:
-                logging.warning('Error uploading to dropbox: {}'.format(link[1]))
+            except Exception as e:
+                logging.warning('Error uploading to dropbox: {}\nException: {}'.format(link[1], e))
                 print('upload failed')
                 continue
 
