@@ -199,7 +199,7 @@ class FercSpider:
 
     @staticmethod
     def upload_dropbox(links, r, **kwargs):
-        access_token = '05mjimtabTkAAAAAAAHZWqPLYduK0Tui5YHkda_vxzG-PcEvyq52LKpJHeASeime'
+        access_token = 'x'
         today = date.today().strftime("%m/%d/%Y").replace('/', '-')
         dbx = dropbox.Dropbox(access_token)
         path = '/test/{}/'.format(today)
